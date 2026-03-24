@@ -22,6 +22,7 @@ env/
 
 # Database / cache
 *.db
+!data/cache.db
 *.db-shm
 *.db-wal
 .nhlposts/

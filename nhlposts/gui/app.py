@@ -11,6 +11,8 @@ import threading
 from pathlib import Path
 from typing import Any
 
+import os
+
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
@@ -25,7 +27,13 @@ st.set_page_config(
 )
 
 # ── App-level constants ────────────────────────────────────────────────────
-DEFAULT_DB = Path.home() / ".nhlposts" / "cache.db"
+# Priority: NHLPOSTS_DB env var → repo data/cache.db → ~/.nhlposts/cache.db
+_REPO_DB = Path(__file__).parent.parent.parent / "data" / "cache.db"
+DEFAULT_DB = (
+    Path(os.environ["NHLPOSTS_DB"]) if "NHLPOSTS_DB" in os.environ
+    else _REPO_DB if _REPO_DB.exists()
+    else Path.home() / ".nhlposts" / "cache.db"
+)
 
 REASON_LABELS = {
     "hit-crossbar": "Crossbar",
@@ -1028,6 +1036,14 @@ def tab_trend(spec, db_path: str) -> None:
 
 def tab_data(db_path: str) -> None:
     st.markdown("### Fetch & Cache Management")
+
+    if Path(db_path) == _REPO_DB:
+        st.info(
+            "**Read-only mode** — this deployment reads data from the repository. "
+            "To update data, run `nhlposts fetch season` locally, copy the DB to "
+            "`data/cache.db`, and push to GitHub.",
+            icon="ℹ️",
+        )
 
     # ── Cache status ─────────────────────────────────────────────────────
     store = get_store(db_path)
